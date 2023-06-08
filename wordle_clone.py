@@ -18,12 +18,31 @@ def main():
         refresh_page(headline=f" Guess {index + 1}")
         show_guesses(guesses, word)
 
-        guesses[index] = input(f"\nGuess Word: ").upper()
+        guesses[index] = guess_word(previous_guesses=guesses[:index])
         if guesses[index] == word:
             break
 
     # Post-process
     game_over(guesses, word, guessed_correctly=guesses[index] == word)
+
+def guess_word(previous_guesses):
+    guess = console.input("\nGuess Word: ").upper()
+
+    if guess in previous_guesses:
+        console.print(f"You've already guessed {guess}.", style="warning")
+        return guess_word(previous_guesses)
+    
+    if len(guess) != 5:
+        console.print("Your guess must be 5 letters.", style="warning")
+        return guess_word(previous_guesses)
+    
+    if any((invalid := letter) not in ascii_letters for letter in guess):
+        console.print(
+            f"Invalid letter: '{invalid}'. Please use English letters.", style="warning",
+        )
+        return guess_word(previous_guesses)
+
+    return guess
 
 def get_random_word(word_list):    
     """Selects a random five-letter word from the wordlist.txt file.
@@ -34,12 +53,15 @@ def get_random_word(word_list):
     'BROKE'
     """
 
-    words = [
+    if words := [
         word.upper()
         for word in word_list
         if len(word) == 5 and all(letter in ascii_letters for letter in word)
-    ]
-    return random.choice(words)
+    ]:
+        return random.choice(words)
+    else:
+        console.print("No words of length 5 are present in the word list", style="warning")
+        raise SystemExit()
 
 def show_guesses(guesses, word):
     for guess in guesses:
